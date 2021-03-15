@@ -8,21 +8,25 @@ namespace WebShopAssignment
     {
         static void Main(string[] args)
         {
-            Seeder.Seed();
-            //TODO: Lägg till användare i databasen.
-            /*new Users
-            {
-                Name = "Administrator",
-                Password = "CodicRulez",
-                IsAdmin = true,
-            };
-            //TODO: Lägg till bokkategorierna i databasen, tabell BookCategory
-            //TODO: Lägg till boktitlar och resterande info i databasen, tabell books
-
             var webShop = new WebShopAPI();
-            */
-            //var id = webShop.Login();
-            //Console.WriteLine(id);
+            
+           // Seeder.SeedUsers();
+           // Seeder.SeedCategories();
+            //TODO: Lägg till boktitlar och resterande info i databasen, tabell books
+            
+
+            
+            var id = webShop.Login("Admin","Saga");
+            Console.WriteLine(id);
+            id = webShop.Login("Administrator", "CodicRulez");
+            Console.WriteLine(id);
+
+            var cat = webShop.GetCategories();
+
+            foreach(var book in cat)
+            {
+                Console.WriteLine(book.Name);
+            }
         }
     }
 }
