@@ -10,6 +10,7 @@ namespace WebShopAssignment.Helpers
         {
         //TODO: fixa en metod som kollar om en användare är admin.
 
+
         }
 
 

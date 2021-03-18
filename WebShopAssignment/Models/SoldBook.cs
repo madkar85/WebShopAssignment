@@ -13,5 +13,6 @@ namespace WebShopAssignment.Models
         public int Price { get; set; }
         public DateTime PurchaseDate { get; set; }
         public int UserId { get; set; }
+       
     }
 }
