@@ -12,7 +12,6 @@ namespace WebShopAssignment
 
             // Seeder.SeedUsers();
             // Seeder.SeedCategories();
-            //TODO: Lägg till boktitlar och resterande info i databasen, tabell books
             //Seeder.SeedBookTitles();
             
 
@@ -22,29 +21,65 @@ namespace WebShopAssignment
             id = webShop.Login("Administrator", "CodicRulez");
             Console.WriteLine(id);
 
+            webShop.Logout(1);
+
+
             var cat = webShop.GetCategories();
 
             foreach(var book in cat)
             {
-                Console.WriteLine(book.Name);
+                Console.WriteLine("Kategorier som finns: " + book.Name);
             }
             //kolla vilka böcker som finns i en viss kategori, baserat på id
             var category = webShop.GetCategory(1);
             foreach(var b in category)
             {
-                Console.WriteLine(b.Title);
+                Console.WriteLine("Katergori med bok i lager: " + b.Title);
             }
 
             //kolla om lager är större än 0
             var available = webShop.GetAvailableBooks();
             foreach(var a in available)
             {
-                Console.WriteLine(a.Title);
+                Console.WriteLine("Bok i lager: " + a.Title);
             }
 
-            var newUser = webShop.Register("Madde", "Test", "Test");
+            //var newUser = webShop.Register("Madde", "Test", "Test");
 
-            webShop.BuyBook(1, 1);
+            // webShop.BuyBook(1, 1);
+            
+            var bookInfo = webShop.GetBook(2);
+            foreach(var info in bookInfo)
+            {
+            Console.WriteLine($"Information: {info}");
+            }
+
+            var books = webShop.GetBooks("The");
+            foreach (var b in books)
+            {
+                Console.WriteLine($"Titlar som matchar: {b.Title}");
+            }
+
+            var author = webShop.GetAuthors("king");
+            foreach(var a in author)
+            {
+                Console.WriteLine($"författare av: {a.Title}");
+            }
+
+           // var newBook = webShop.AddBook(1, "Last Continent", "Terry Pratchett", 170, 5);
+
+            var users = webShop.ListUser(1);
+            foreach (var u in users)
+            {
+                Console.WriteLine($"Användare: {u.Name}");
+            }
+
+            users = webShop.FindUser(1, "Cust");
+            foreach (var u in users)
+            {
+                Console.WriteLine(u.Name);
+            }
+            
         }
     }
 }
