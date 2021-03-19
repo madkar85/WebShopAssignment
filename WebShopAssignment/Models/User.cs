@@ -13,7 +13,7 @@ namespace WebShopAssignment.Models
         public string Password { get; set; }
         public DateTime LastLogin { get; set; }
         public DateTime SessionTimer { get; set; }
-        public bool IsActive { get; set; }
-        public bool IsAdmin { get; set; }
+        public bool IsActive { get; set; } = true;
+        public bool IsAdmin { get; set; } = false;
     }
 }

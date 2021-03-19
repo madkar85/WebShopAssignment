@@ -22,14 +22,12 @@ namespace WebShopAssignment
         /// <returns></returns>
         public int Login(string userName, string password)
         {
-            //Lägg till IsActive i syntaxen
-            var user = db.Users.FirstOrDefault(u => u.Name == userName && u.Password == password);
+            var user = db.Users.FirstOrDefault(u => u.Name == userName && u.Password == password && u.IsActive);
 
             if (user != null)
             {
                 user.LastLogin = DateTime.Now;
                 user.SessionTimer = DateTime.Now;
-                db.Users.Update(user);
                 db.SaveChanges();
                 return user.Id;
             }
@@ -47,7 +45,6 @@ namespace WebShopAssignment
             if (user != null)
             {
                 user.SessionTimer = DateTime.MinValue;
-                db.Users.Update(user);
                 db.SaveChanges();
             }
         }
@@ -90,11 +87,13 @@ namespace WebShopAssignment
             var available = db.Books.Where(c => c.Amount > 0);
             return available.ToList();
         }
-
+        /// <summary>
+        /// Skriver ut informationen om en specifik bok.
+        /// </summary>
+        /// <param name="bookId"></param>
+        /// <returns></returns>
         public List<Book> GetBook(int bookId)
         {
-            //TODO: skapa metod som skriver ut informationen om en specifik bok, sök efter book ID
-            //returnera informationen om boken. Fixa hur man skriver ut listan
             var book = db.Books.Where(b => b.Id == bookId);
             return book.ToList();
         }
@@ -106,7 +105,6 @@ namespace WebShopAssignment
         public List<Book> GetBooks(string keyword)
         {
             var books = db.Books.Where(b => b.Title.Contains(keyword));
-
             return books.ToList();
         }
         /// <summary>
@@ -119,35 +117,54 @@ namespace WebShopAssignment
             var author = db.Books.Where(a => a.Author.Contains(keyword));
             return author.ToList();
         }
-
+        /// <summary>
+        /// Kollar om user är inloggad, kopierar infon för en köpt bok till SoldBookstabellen.
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <param name="bookId"></param>
+        /// <returns></returns>
         public bool BuyBook(int userId, int bookId)
         {
-            //TODO: metod som kollar om boken finns i lager, kollar att SessionTimer inte är mer än 15 min
-            //kopierar bokdata till soldBooks, fyller på SoldBooks med datum och userid
-            //returnera true om köpet är ok
             var user = db.Users.FirstOrDefault(u => u.Id == userId && u.SessionTimer > DateTime.Now.AddMinutes(-15));
 
-            if (user != null)
+            if (user == null)
             {
-                using (var db = new MyDatabase())
-                {
-                    var org = db.Books.Find(bookId);
-                    var copy = new SoldBook();
-
-                    db.Entry(copy).CurrentValues.SetValues(org);
-                    db.SoldBooks.Add(copy);
-                    db.SaveChanges();
-                    return true;
-                }
-
+                return false;
             }
-            return false;
-        }
 
-        public void Ping(int userId)
+            using (var db = new MyDatabase())
+            {
+                var org = db.Books.Find(bookId);
+                var copy = new SoldBook
+                {
+                    Title = org.Title,
+                    Author = org.Author,
+                    CategoryId = org.CategoryId,
+                    Price = org.Price,
+                    PurchaseDate = DateTime.Now,
+                    UserId = userId,
+                };
+                db.SoldBooks.Add(copy);
+                org.Amount -= 1;
+                db.SaveChanges();
+                return true;
+            }
+
+        }
+        /// <summary>
+        /// Kolla om användaren är aktiv
+        /// </summary>
+        /// <param name="userId"></param>
+        /// <returns></returns>
+        public string Ping(int userId)
         {
-            //TODO: kollar att användaren är online (kollar anslutningen)
-            //returnera pong om användaren är online, annars string.empty
+            var user = db.Users.FirstOrDefault(u => u.Id == userId && u.SessionTimer > DateTime.Now.AddMinutes(-15));
+            if (user == null)
+            {
+                return string.Empty;
+            }
+
+            return "pong";
         }
 
         /// <summary>
@@ -159,7 +176,6 @@ namespace WebShopAssignment
         /// <returns></returns>
         public bool Register(string name, string password, string verifyPassword)
         {
-            //fixa default IsActive == true
             var user = db.Users.FirstOrDefault(u => u.Name == name && u.Password == password);
             if (user != null)
             {
@@ -185,29 +201,33 @@ namespace WebShopAssignment
         {
             var user = db.Users.FirstOrDefault(a => a.Id == adminId);
 
-            if (UserHelper.IsUserAdmin(user) == true)
+            if (UserHelper.IsUserAdmin(user) == false)
             {
-                db.Books.Add(new Book { Title = title, Author = author, Price = price, Amount = amount });
-                db.SaveChanges();
-
-                return true;
+                return false;
             }
-            return false;
+
+            db.Books.Add(new Book { Title = title, Author = author, Price = price, Amount = amount });
+            db.SaveChanges();
+            return true;
 
         }
-
+        /// <summary>
+        /// Kollar om admin och sätter sedan ett nytt antal böcker i lager på en specifik bok
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="bookId"></param>
+        /// <param name="amount"></param>
         public void SetAmount(int adminId, int bookId, int amount)
         {
-            //TODO: metod som returnerar antal böcker i lager, på specific bok?
-            //returnerar "sets amount of available books"
             var user = db.Users.FirstOrDefault(a => a.Id == adminId);
             if (UserHelper.IsUserAdmin(user) == true)
-            { 
-                var book = db.Books.Where(b => b.Id == bookId).ToList().ForEach(a => a.Amount = { amount});
-                
-                
+            {
+                var book = db.Books.FirstOrDefault(b => b.Id == bookId);
+
+                book.Amount = amount;
+                db.Books.Update(book);
+                db.SaveChanges();
             }
-            
         }
 
         /// <summary>
@@ -234,8 +254,6 @@ namespace WebShopAssignment
         /// <returns></returns>
         public List<User> FindUser(int adminId, string keyword)
         {
-            //TODO: kolla om användaren är admin. skriv ut en lista med användare som matchar med keyword
-            // returnerar en lista med användare som matchar keyword
             var user = db.Users.FirstOrDefault(a => a.Id == adminId);
             if (UserHelper.IsUserAdmin(user) == true)
             {
@@ -244,45 +262,195 @@ namespace WebShopAssignment
             }
             return null;
         }
-
-        public void UpdateBook(int adminId, int id, string title, string author, int price)
+        /// <summary>
+        /// Kollar om admin, uppdaterar sedan bokens uppgifter
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="id"></param>
+        /// <param name="title"></param>
+        /// <param name="author"></param>
+        /// <param name="price"></param>
+        /// <returns></returns>
+        public bool UpdateBook(int adminId, int id, string title, string author, int price)
         {
-            //TODO: kolla om användaren är admin. Updatera bokens uppgifter. returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+
+            var book = db.Books.FirstOrDefault(b => b.Id == id);
+            if (book == null)
+            {
+                return false;
+            }
+
+            book.Title = title;
+            book.Author = author;
+            book.Price = price;
+
+            db.Books.Update(book);
+            db.SaveChanges();
+            return true;
+
         }
-
-        public void DeleteBook(int adminId, int bookId)
+        /// <summary>
+        /// Kollar om admin, minskar antal böcker i lager. Om lager är 0 tas boken bort.
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="bookId"></param>
+        /// <param name="newAmount"></param>
+        /// <returns></returns>
+        public bool DeleteBook(int adminId, int bookId, int newAmount)
         {
-            //TODO: kolla om användaren är admin. minska antal böcker. om det är noll, ta bort boken
-            // returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+
+            var book = db.Books.FirstOrDefault(b => b.Id == bookId);
+            if (book == null)
+            {
+                return false;
+            }
+
+            book.Amount -= newAmount;
+            if (book.Amount <= 0)
+            {
+                db.Books.Remove(book);
+            }
+            return true;
         }
-
-        public void AddCategory (int adminId, string name)
+        /// <summary>
+        /// Kollar admin, lägger sedan till en kategori om denna inte redan finns.
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool AddCategory(int adminId, string name)
         {
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
 
+            var category = db.BookCategories.FirstOrDefault(c => c.Name == name);
+            if (category != null)
+            {
+                return false;
+            }
+
+            db.BookCategories.Add(new BookCategory { Name = name });
+            db.SaveChanges();
+            return true;
         }
-
-        public void AddBookToCategory(int adminId, int bookId, int categoryId)
+        /// <summary>
+        /// Kollar admin, lägger till en kategori på en specifik bok.
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="bookId"></param>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
+        public bool AddBookToCategory(int adminId, int bookId, int categoryId)
         {
-            //TODO: kolla om användaren är admin. Lägg sedan till en kategori till boken
-            //returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+
+            var book = db.Books.FirstOrDefault(b => b.Id == bookId);
+
+            book.CategoryId = categoryId;
+            db.SaveChanges();
+            return true;
         }
-
-        public void UpdateCategory(int adminId, int categoryId, string name)
+        /// <summary>
+        /// Kolla om admin, uppdatera sedan namnet på en specifik kategori
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="categoryId"></param>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public bool UpdateCategory(int adminId, int categoryId, string name)
         {
-            //TODO:kolla om användaren är admin. Uppdatera sedan namnet på kategorin
-            //returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+            var cat = db.BookCategories.FirstOrDefault(c => c.Id == categoryId);
+
+            if (cat == null)
+            {
+                return false;
+            }
+
+            cat.Name = name;
+            db.SaveChanges();
+            return true;
         }
-
-        public void DeleteCategory(int adminId, int categoryId)
+        /// <summary>
+        /// kollar om admin, tar bort kategorin om den inte har några böcker kopplade
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="categoryId"></param>
+        /// <returns></returns>
+        public bool DeleteCategory(int adminId, int categoryId)
         {
-            //TODO: kolla om användaren är admin. Ta bort en kategri OM denna är tom, annars failar metoden.
-            //returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+
+            var cat = db.BookCategories.FirstOrDefault(c => c.Id == categoryId);
+
+            if (cat == null)
+            {
+                return false;
+            }
+
+            var book = db.Books.Where(b => b.CategoryId == cat.Id);
+            if (book.Count() > 0)
+            {
+                return false;
+            }
+
+            db.BookCategories.Remove(cat);
+            db.SaveChanges();
+
+            return true;
         }
-
-        public void AddUser(int adminId, string name, string password)
+        /// <summary>
+        /// Kollar om admin, lägger sedan till en användare om denna inte redan finns
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <param name="name"></param>
+        /// <param name="password"></param>
+        /// <returns></returns>
+        public bool AddUser(int adminId, string name, string password)
         {
-            //TODO: kolla om användaren är admin. Lägg sedan till en användare, fails om användaren finns eller om lösenord är tomt.
-            //returnera true om det går, false om det inte går
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return false;
+            }
+
+            var newUser = db.Users.FirstOrDefault(u => u.Name == name);
+
+            if (newUser != null)
+            {
+                return false;
+            }
+
+            db.Users.Add(new User { Name = name, Password = password });
+            db.SaveChanges();
+
+            return true;
+
         }
     }
 }
