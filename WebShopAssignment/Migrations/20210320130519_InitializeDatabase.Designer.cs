@@ -10,8 +10,8 @@ using WebShopAssignment.Database;
 namespace WebShopAssignment.Migrations
 {
     [DbContext(typeof(MyDatabase))]
-    [Migration("20210312135115_AddedSoldBooks")]
-    partial class AddedSoldBooks
+    [Migration("20210320130519_InitializeDatabase")]
+    partial class InitializeDatabase
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {

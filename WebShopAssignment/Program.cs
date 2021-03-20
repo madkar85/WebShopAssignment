@@ -10,95 +10,71 @@ namespace WebShopAssignment
         {
             var webShop = new WebShopAPI();
 
-            // Seeder.SeedUsers();
-            // Seeder.SeedCategories();
-            //Seeder.SeedBookTitles();
-            
-
-            
-            var id = webShop.Login("Admin","Saga");
-            Console.WriteLine(id);
-            id = webShop.Login("Administrator", "CodicRulez");
-            Console.WriteLine(id);
-            id = webShop.Login("TestCustomer", "CodicRulez");
-
-            //webShop.Logout(1);
-            var check = webShop.Ping(2);
-            Console.WriteLine(check);
-            webShop.Ping(1);
-
+            //Kör Seeders först
             /*
+            Seeder.SeedUsers();
+            Seeder.SeedCategories();
+            Seeder.SeedBookTitles();
+            */
+            
+            /*
+            // Test 1 - logga in, sök på kategorier och köp en bok           
+            var id = webShop.Login("Administrator", "CodicRulez");
+            Console.WriteLine(id);                   
+            var check = webShop.Ping(1);
+            Console.WriteLine(check);
+           
+
+            // Lista på alla kategorier som finns
             var cats = webShop.GetCategories();
             foreach(var cat in cats)
             {
                 Console.WriteLine($"Kategorier som finns: ID {cat.Id} Namn: { cat.Name }");
             }
-            */
-            //kolla vilka böcker som finns i en viss kategori, baserat på id
-            /*
-            var category = webShop.GetCategory(1);
+            
+            //kolla vilka kategorier som finns, baserat på sökord           
+            var category = webShop.GetCategories("Horror");
             foreach(var b in category)
+            {
+                Console.WriteLine($"Katergorier som matchar sökordet: {b.Name}");
+            }
+            //Skriver ut namn på böckerna med en specifik kategori
+            var booksWithCategory = webShop.GetCategory(1);
+            foreach( var b in booksWithCategory)
             {
                 Console.WriteLine($"Katergori med bok i lager: {b.Title}");
             }
-            */
-            //kolla om lager är större än 0
-            /*
-            var available = webShop.GetAvailableBooks();
-            foreach(var a in available)
-            {
-                Console.WriteLine($"Bok i lager: {a.Title}");
-            }
-            */
 
-            //var newUser = webShop.Register("Skrutt", "Test", "Test");
-
-            // webShop.BuyBook(1, 15);
-            /*
+            //Skriv ut info om bok
             var bookInfo = webShop.GetBook(2);
-            foreach(var info in bookInfo)
+            foreach (var info in bookInfo)
             {
                 UserHelper.PrintAllInformation(info);
             }
-            */
-            /*
-            var books = webShop.GetBooks("The");
-            foreach (var b in books)
+            //köp en bok
+            webShop.BuyBook(1, 2);
+        
+            //kolla hur många av varje bok som finns i lager
+            var available = webShop.GetAvailableBooks();
+            foreach (var a in available)
             {
-                Console.WriteLine($"Titlar som matchar: {b.Title}");
+                Console.WriteLine($"Bok i lager: {a.Title}. Antal: {a.Amount}");
             }
             */
+
             /*
-            var author = webShop.GetAuthors("king");
-            foreach(var a in author)
-            {
-                Console.WriteLine($"författare av: {a.Title}");
-            }
+            //Test 2 - Logga in som admin, skapa en kategori
+            webShop.Login("Administrator", "CodicRulez");
+            webShop.AddCategory(1, "Kids");
+            webShop.AddBook(1, "Horton Hears A Who", "Dr Seuss", 100, 2);
+            webShop.AddBookToCategory(1, 5, 5);
             */
-            webShop.BuyBook(2, 4);
-            //var newBook = webShop.AddBook(1, "Horton Hears A Who", "Dr Seuss", 100, 2);
+
             /*
-            var users = webShop.ListUser(1);
-            foreach (var u in users)
-            {
-                Console.WriteLine($"Användare: {u.Name}");
-            }
+            // Test 3 - skapa en användare
+            webShop.Login("Administrator", "CodicRulez");
+            webShop.AddUser(1, "maja", "Codic2021");
             */
-            /*
-            users = webShop.FindUser(1, "Cust");
-            foreach (var u in users)
-            {
-                Console.WriteLine(u.Name);
-            }
-            */
-            //webShop.SetAmount(1, 3, 8);
-            //webShop.UpdateBook(1, 3, "Doctor Sleep", "Stephen King", 150);
-            //webShop.DeleteBook(1, 16, 10);           
-            //webShop.AddCategory(1, "Kids");
-            //webShop.AddBookToCategory(1, 17, 5);
-            //webShop.UpdateCategory(1, 7, "ANIMALIA");
-            //webShop.DeleteCategory(1,6);
-            //webShop.AddUser(1, "maja", "Codic2021");
 
         }
     }
