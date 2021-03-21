@@ -9,7 +9,7 @@ namespace WebShopAssignment.Helpers
 {
     public class Seeder
     {
-        //Fixa metoder som lägger till exempeldatan i databasen
+        
         public static void SeedCategories()
         {
             using (var db = new MyDatabase())

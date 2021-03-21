@@ -9,7 +9,6 @@ namespace WebShopAssignment.Helpers
     {
         public static bool IsUserAdmin(User user)
         {
-            //TODO: fixa en metod som kollar om en användare är admin.
             if (user == null || !user.IsAdmin)
             {
                 return false;
