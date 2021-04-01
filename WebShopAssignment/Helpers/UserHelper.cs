@@ -23,7 +23,7 @@ namespace WebShopAssignment.Helpers
 
         public static void PrintAllInformation(Book book)
         {
-            Console.WriteLine($"ID: {book.Id }, Titel: {book.Title}, Författare: {book.Author}, Pris: {book.Price}, Antal i lager: {book.Amount} ");
+            Console.WriteLine($"ID: {book.Id }, Titel: {book.Title}, Författare: {book.Author}, Pris: {book.Price}, Antal i lager: {book.Amount} Kategori: {book.CategoryId}");
         }
 
     }

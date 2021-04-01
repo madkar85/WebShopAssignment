@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using WebShopAssignment.Database;
@@ -88,14 +89,15 @@ namespace WebShopAssignment
             return available.ToList();
         }
         /// <summary>
+        /// ÄNDRING 1/4. Ändrade från List<Book> till Book
         /// Skriver ut informationen om en specifik bok.
         /// </summary>
         /// <param name="bookId"></param>
         /// <returns></returns>
-        public List<Book> GetBook(int bookId)
+        public Book GetBook(int bookId)
         {
-            var book = db.Books.Where(b => b.Id == bookId);
-            return book.ToList();
+            var book = db.Books.FirstOrDefault(b => b.Id == bookId);
+            return book;
         }
         /// <summary>
         /// Visar alla böcker som har inputvärdet i titeln
@@ -227,6 +229,9 @@ namespace WebShopAssignment
                 book.Amount = amount;
                 db.Books.Update(book);
                 db.SaveChanges();
+                Console.WriteLine("Uppdaterad");
+                Thread.Sleep(2000);
+                Console.Clear();
             }
         }
 
@@ -295,13 +300,14 @@ namespace WebShopAssignment
 
         }
         /// <summary>
-        /// Kollar om admin, minskar antal böcker i lager. Om lager är 0 tas boken bort.
+        /// Kollar om admin, minskar antal böcker i lager. Om lager är 0 tas boken bort.ÄNDRING 31/3!! Hade glömt SaveChanges();
+        /// och att returnera false vid antal > 0
         /// </summary>
         /// <param name="adminId"></param>
         /// <param name="bookId"></param>
         /// <param name="newAmount"></param>
         /// <returns></returns>
-        public bool DeleteBook(int adminId, int bookId, int newAmount)
+        public bool DeleteBook(int adminId, int bookId)
         {
             var user = db.Users.FirstOrDefault(a => a.Id == adminId);
             if (UserHelper.IsUserAdmin(user) == false)
@@ -315,12 +321,13 @@ namespace WebShopAssignment
                 return false;
             }
 
-            book.Amount -= newAmount;
             if (book.Amount <= 0)
             {
                 db.Books.Remove(book);
+                db.SaveChanges();
+                return true;
             }
-            return true;
+            return false;
         }
         /// <summary>
         /// Kollar admin, lägger sedan till en kategori om denna inte redan finns.
@@ -450,7 +457,29 @@ namespace WebShopAssignment
             db.SaveChanges();
 
             return true;
-
+        }
+        /// <summary>
+        /// NY METOD I INLÄMNING 3!!! Skriver ut en lista på alla böcker i databasen
+        /// </summary>
+        /// <returns></returns>
+        public List<Book> GetAllBooks()
+        {
+            return db.Books.ToList();
+        }
+        /// <summary>
+        /// NY METOD I INLÄMNING 3!!! Skriver ut alla böcker som inte finns i lager
+        /// </summary>
+        /// <param name="adminId"></param>
+        /// <returns></returns>
+        public List<Book> BooksWithoutAmount(int adminId)
+        {
+            var user = db.Users.FirstOrDefault(a => a.Id == adminId);
+            if (UserHelper.IsUserAdmin(user) == false)
+            {
+                return null;
+            }
+            var notAvailable = db.Books.Where(n => n.Amount <= 0);
+            return notAvailable.ToList();
         }
     }
 }
